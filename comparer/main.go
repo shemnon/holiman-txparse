@@ -35,6 +35,9 @@ func doit(bins []string, input string) error {
 		scanner = bufio.NewScanner(indata)
 	)
 
+	buf := make([]byte, 16*1024*1024)
+	scanner.Buffer(buf, cap(buf))
+
 	for _, bin := range bins {
 		cmdArgs := strings.Split(bin, " ")
 		var args []string
@@ -50,7 +53,6 @@ func doit(bins []string, input string) error {
 		if err != nil {
 			return err
 		}
-
 		if err = cmd.Start(); err != nil {
 			return err
 		}
@@ -76,7 +78,7 @@ func doit(bins []string, input string) error {
 			if proc.outbuf.Scan() {
 				cur = proc.outbuf.Text()
 			} else {
-				panic("foo")
+				panic(proc.outbuf.Err())
 			}
 			outputs = append(outputs, cur)
 			if i == 0 {
@@ -87,6 +89,7 @@ func doit(bins []string, input string) error {
 				prev = cur
 				continue
 			}
+
 			if prev != cur {
 				ok = false
 			}
@@ -100,5 +103,5 @@ func doit(bins []string, input string) error {
 			fmt.Fprintln(os.Stderr, l)
 		}
 	}
-	return nil
+	return scanner.Err()
 }
